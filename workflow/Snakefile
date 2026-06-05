@@ -1,0 +1,164 @@
+import os
+import pandas as pd
+from pathlib import Path
+
+configfile: "config/config.yaml"
+
+my_basedir = workflow.current_basedir
+
+samples_df = pd.read_csv(config["samples"])
+SAMPLES = list(samples_df["sample_id"])
+
+PREFIX = config["prefix"]
+REF_GENOME = config["reference_genome"]
+REF_CONTIG = config["reference_contig"]
+
+READ_INPUT_TYPE = config.get("read_input_type", "raw")
+WORKFLOW_MODE = config.get("workflow_mode", "full")
+
+EXISTING_MSA = config.get("existing_msa", "")
+USE_EXISTING_MSA = bool(EXISTING_MSA)
+
+PLASMID_MODE = bool(config.get("plasmid_variant_calling", False))
+PHAGE_ENABLED = not PLASMID_MODE
+PHASTEST_RESULTS = config.get("phastest_results", "")
+
+if PHAGE_ENABLED and not PHASTEST_RESULTS:
+    raise ValueError("phastest_results must be set when plasmid_variant_calling is false.")
+
+if (not PHAGE_ENABLED) and PHASTEST_RESULTS:
+    print("Note: phastest_results provided but plasmid_variant_calling is true; phage masking will be skipped.")
+
+file_name = os.path.basename(REF_GENOME)
+REF_NAME = file_name.split(".")[0]
+
+# Hard-coded read suffixes. Assumes that raw reads are named with _R1.fastq.gz and _R2.fastq.gz suffixes, 
+# and that trimmed reads are named with _R1_trim_paired.fastq.gz and _R2_trim_paired.fastq.gz suffixes. 
+
+RAW_R1_SUFFIX = "_R1.fastq.gz"
+RAW_R2_SUFFIX = "_R2.fastq.gz"
+TRIMMED_R1_SUFFIX = "_R1_trim_paired.fastq.gz"
+TRIMMED_R2_SUFFIX = "_R2_trim_paired.fastq.gz"
+
+
+def input_r1(wc):
+    if READ_INPUT_TYPE == "raw":
+        return os.path.join(config["input_reads"], f"{wc.sample}{RAW_R1_SUFFIX}")
+    elif READ_INPUT_TYPE == "trimmed":
+        return os.path.join(config["input_reads"], f"{wc.sample}{TRIMMED_R1_SUFFIX}")
+    else:
+        raise ValueError("read_input_type must be 'raw' or 'trimmed'")
+
+
+def input_r2(wc):
+    if READ_INPUT_TYPE == "raw":
+        return os.path.join(config["input_reads"], f"{wc.sample}{RAW_R2_SUFFIX}")
+    elif READ_INPUT_TYPE == "trimmed":
+        return os.path.join(config["input_reads"], f"{wc.sample}{TRIMMED_R2_SUFFIX}")
+    else:
+        raise ValueError("read_input_type must be 'raw' or 'trimmed'")
+
+def trimmed_r1_for_downsample(wc):
+    # Only used when starting from raw reads.
+    return f"results/{wc.prefix}/trimmomatic/{wc.sample}/{wc.sample}_R1_trim_paired.fastq.gz"
+
+def trimmed_r2_for_downsample(wc):
+    # Only used when starting from raw reads.
+    return f"results/{wc.prefix}/trimmomatic/{wc.sample}/{wc.sample}_R2_trim_paired.fastq.gz"
+
+def align_r1(wc):
+    if READ_INPUT_TYPE == "raw":
+        return f"results/{wc.prefix}/downsample/{wc.sample}/{wc.sample}_R1_trim_paired.fastq.gz"
+    elif READ_INPUT_TYPE == "trimmed":
+        return input_r1(wc)
+    else:
+        raise ValueError("read_input_type must be 'raw' or 'trimmed'")
+
+def align_r2(wc):
+    if READ_INPUT_TYPE == "raw":
+        return f"results/{wc.prefix}/downsample/{wc.sample}/{wc.sample}_R2_trim_paired.fastq.gz"
+    elif READ_INPUT_TYPE == "trimmed":
+        return input_r2(wc)
+    else:
+        raise ValueError("read_input_type must be 'raw' or 'trimmed'")
+
+STANDARD_MSA = f"results/{PREFIX}/alignment/{PREFIX}_genome_aln_w_alt_allele_unmapped.fa"
+MERGED_MSA = f"results/{PREFIX}/alignment/{PREFIX}_merged_with_existing.fa"
+
+FINAL_MSA = MERGED_MSA if USE_EXISTING_MSA else STANDARD_MSA
+
+VCF_ONLY_TARGETS = [
+    expand("results/{prefix}/samtools_varcall/{sample}/{sample}_aln_mpileup_raw.vcf.gz",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/filtered_vcf/{sample}/{sample}_filter_snp_final.vcf.gz",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/filtered_vcf/{sample}/{sample}_filter_indel_final.vcf.gz",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/filtered_vcf/{sample}/{sample}_5bp_indel_removed.vcf.gz",
+           prefix=PREFIX, sample=SAMPLES),
+]
+
+FULL_TARGETS = VCF_ONLY_TARGETS + [
+    expand("results/{prefix}/unmapped_vcf/{sample}/{sample}_unmapped.vcf.gz",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/unmapped_positions/{sample}_unmapped_positions.tsv",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/filtered_mask_vcf/{sample}/{sample}_filtered_mask.vcf.gz",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/filtered_out_variants/{sample}_filtered_out_variants.tsv",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/pass_alt_variants/{sample}_pass_alt_variants.tsv",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/indel_prox_mask_vcf/{sample}/{sample}_indel_prox_mask.vcf.gz",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/indel_prox_positions/{sample}_indel_prox_positions.tsv",
+           prefix=PREFIX, sample=SAMPLES),
+
+    expand("results/{prefix}/consensus_ref_allele_unmapped_variants/{sample}/{sample}_ref_allele_unmapped_variants.dash.fa",
+           prefix=PREFIX, sample=SAMPLES),
+
+    FINAL_MSA,
+]
+
+if WORKFLOW_MODE == "vcf_only":
+    FINAL_TARGETS = VCF_ONLY_TARGETS
+elif WORKFLOW_MODE == "full":
+    FINAL_TARGETS = FULL_TARGETS
+else:
+    raise ValueError("workflow_mode must be 'vcf_only' or 'full'")
+
+
+rule all:
+    input:
+        FINAL_TARGETS
+
+####### rules #################
+include: "rules/1_trim_raw_reads.smk"
+include: "rules/2_downsample_clean_reads.smk"
+include: "rules/3_align_reads.smk"
+include: "rules/4_removed_clipped_reads.smk"
+include: "rules/5_post_align_remove_pcr_duplicates.smk"
+include: "rules/6_unmapped_regions_stats_reference_files.smk"
+include: "rules/7_bcftools_call_snps.smk"
+include: "rules/8_gatk_call_indels.smk"
+include: "rules/9_variant_hard_filter.smk"
+include: "rules/10_remove_5_bp_snp_flanking_to_indels.smk"
+include: "rules/11_snpEff_annotation.smk"
+include: "rules/12_make_unmapped_vcfs.smk"
+include: "rules/13_make_filtered_mask_vcf.smk"
+include: "rules/14_phage_enabled.smk"
+include: "rules/15_make_indel_prox_mask_vcf.smk"
+include: "rules/16_consensus_ref_allele_unmapped_variants.smk"
+include: "rules/17_apply_unmapped_dashes.smk"
+include: "rules/18_make_msa.smk"
+include: "rules/19_merge_with_existing_msa.smk" 
+

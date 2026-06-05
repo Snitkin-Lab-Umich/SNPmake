@@ -1,0 +1,9 @@
+name: snpEff
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - snpeff=5.0
+  - ruamel.yaml
+  
