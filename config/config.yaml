@@ -1,0 +1,63 @@
+# Configuration settings for Snakemake
+
+# Directory prefix where the outputs will be saved to
+# Rename this to your preferred naming convention with this format:year-month-day_Project_Name_SNPmake
+prefix: 2026-06-04_Project_IMPALA_run3_SNPmake
+
+# Relative path where your samples are found
+samples: config/samples.csv
+
+# raw or trimmed
+read_input_type: trimmed   # options: raw or trimmed
+input_reads: /nfs/turbo/umms-esnitkin/Project_IMPALA/Sequence_data/illumina_fastq/clean_fastq_qc_pass_samples
+
+# run mode
+workflow_mode: full    # options: full, vcf-only
+
+# Path to the reference genome
+reference_genome: /nfs/turbo/umms-esnitkin/Project_IMPALA/Sequence_data/variant_calling/ref_genomes/IMPALA_ref_vc_Run3/hybrid_IMPALA_nano_103_AA337.fasta
+reference_contig: hybrid_IMPALA_nano_103_AA337
+
+# Set the estimated genome size for coverage calculations 
+genome_size: 5000000
+
+# Command line parameters for rule trimmomatic_pe
+adaptor_filepath: config/adapters/combined_Adaptors.fa
+seed_mismatches: 2
+palindrome_clipthreshold: 30
+simple_clipthreshold: 10
+minadapterlength: 8
+keep_both_reads: true
+#sliding window
+window_size: 4
+window_size_quality: 20
+minlength: 40
+headcrop_length: 0
+
+#snp filters-- samtools/bcftools
+dp_snp_filter: DP > 9
+fq_snp_filter: FQ < 0.025
+mq_snp_filter: MQ > 50
+qual_snp_filter: QUAL > 100
+af_snp_filter: AF1 > 0.900
+
+#gatk
+# indel -- gatk filters
+dp_indel_filter: DP > 9
+mq_indel_filter: MQ > 50.00
+qual_indel_filter: QUAL > 2
+af_indel_filter: AF > 0.900
+
+#snpEff
+snpEff_path: 
+data_dir: 
+snpEff_config_file: 
+snpeff_parameters: -d -no-downstream -no-upstream
+
+# If true, phage masking skipped
+plasmid_variant_calling: true
+phastest_results: 
+
+# If you have an existing MSA that you want to use for phylogenetic tree construction, provide the path here. 
+# Otherwise, leave blank and the workflow will generate an MSA from the filtered SNPs.
+existing_msa:
