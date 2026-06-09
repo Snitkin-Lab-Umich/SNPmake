@@ -1,0 +1,25 @@
+# profile/config.yaml
+
+# General snakemake parameters
+use-conda: true
+use-singularity: true
+use-envmodules: true
+printshellcmds: true
+latency-wait: 100
+nolock: true
+conda-frontend: mamba
+jobs: 50
+
+# Slurm parameters
+slurm: True
+
+# Default slurm resources
+default-resources:
+  - slurm_account=esnitkin1
+  - slurm_partition=standard
+  - runtime=60
+  - mem_mb=5000
+  - slurm_extra="--output=slurm_out/slurm-%j.out"
+
+local-cores: 1
+rerun-incomplete: true
