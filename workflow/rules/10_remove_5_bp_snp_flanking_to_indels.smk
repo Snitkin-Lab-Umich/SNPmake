@@ -13,7 +13,7 @@ rule remove_5_bp_snp_flanking_to_indels:
     threads: 1
     resources:
         mem_mb=1000,
-        runtime=10
+        runtime=60
     wrapper:
         "file:workflow/wrapper_functions/remove_5_bp_snp_flanking_to_indels"
     
