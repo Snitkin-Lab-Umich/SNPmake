@@ -17,7 +17,7 @@ slurm: True
 default-resources:
   - slurm_account=esnitkin1
   - slurm_partition=standard
-  - runtime=60
+  - runtime=90
   - mem_mb=5000
   - slurm_extra="--output=slurm_out/slurm-%j.out"
 
