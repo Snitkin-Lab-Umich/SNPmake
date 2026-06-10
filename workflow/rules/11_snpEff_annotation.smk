@@ -21,6 +21,6 @@ rule snpEff_annotation:
     threads: 3
     resources:
         mem_mb=1000,
-        runtime=15
+        runtime=60
     wrapper:
         "file:workflow/wrapper_functions/snpEff_annotation"
