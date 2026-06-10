@@ -17,6 +17,6 @@ rule gatk_call_indels:
     threads: 3
     resources:
         mem_mb=4000,
-        runtime=30
+        runtime=60
     wrapper:
         "file:workflow/wrapper_functions/gatk_call_indel"
