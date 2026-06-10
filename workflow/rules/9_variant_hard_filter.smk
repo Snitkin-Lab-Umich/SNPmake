@@ -30,6 +30,6 @@ rule variant_hard_filter:
     threads: 2
     resources:
         mem_mb=2000,
-        runtime=10
+        runtime=60
     wrapper:
         "file:workflow/wrapper_functions/hard_filter"
