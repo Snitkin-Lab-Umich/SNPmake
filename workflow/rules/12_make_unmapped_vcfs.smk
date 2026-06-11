@@ -51,6 +51,8 @@ rule summarize_unmapped_positions:
         sample="{sample}"
     benchmark: 
         "benchmarks/{prefix}/summarize_unmapped_positions/{sample}.benchmark.tsv"
+    conda:
+        "envs/make_filtered_mask_vcf.yaml"
     threads: 1
     resources:
         mem_mb=1000,
