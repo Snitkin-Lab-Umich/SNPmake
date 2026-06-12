@@ -4,7 +4,7 @@ rule bcftools_call_snps:
     input:
         index_sorted_dups_rmvd_bam = "results/{prefix}/post_align/{sample}/sorted_bam_dups_removed/{sample}_final.bam",
     output:
-        final_raw_vcf = "results/{prefix}/samtools_varcall/{sample}/{sample}_aln_mpileup_raw.vcf",
+        final_raw_vcf = temp("results/{prefix}/samtools_varcall/{sample}/{sample}_aln_mpileup_raw.vcf"),
         raw_vcf_gz="results/{prefix}/samtools_varcall/{sample}/{sample}_aln_mpileup_raw.vcf.gz",
     log:
         "logs/{prefix}/samtools_varcall/{sample}/{sample}_bcftools_call_snps.log"

@@ -6,7 +6,7 @@ rule gatk_call_indels:
         index_sorted_dups_rmvd_bam = "results/{prefix}/post_align/{sample}/sorted_bam_dups_removed/{sample}_final.bam",
     output:
         final_raw_vcf= "results/{prefix}/gatk_varcall/{sample}/{sample}_aln_mpileup_raw.vcf",
-        indel_file = "results/{prefix}/gatk_varcall/{sample}/{sample}_indel.vcf",
+        indel_file = temp("results/{prefix}/gatk_varcall/{sample}/{sample}_indel.vcf"),
         zipped_indel_vcf = "results/{prefix}/gatk_varcall/{sample}/{sample}_indel.vcf.gz"
     params:
         ref_genome = config["reference_genome"]

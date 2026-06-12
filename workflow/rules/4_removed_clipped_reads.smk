@@ -3,9 +3,9 @@ rule removed_clipped_reads:
     input:
         aligned_sam_out = "results/{prefix}/align_reads/{sample}/{sample}_aln.sam"
     output:
-        clipped_sam_out = "results/{prefix}/post_align/{sample}/samclip/{sample}_clipped.sam",
-        bam_out = "results/{prefix}/post_align/{sample}/aligned_bam/{sample}_aln.bam",
-        sorted_bam_out = "results/{prefix}/post_align/{sample}/sorted_bam/{sample}_aln_sort.bam"
+        clipped_sam_out = temp("results/{prefix}/post_align/{sample}/samclip/{sample}_clipped.sam"),
+        bam_out = temp("results/{prefix}/post_align/{sample}/aligned_bam/{sample}_aln.bam"),
+        sorted_bam_out = temp("results/{prefix}/post_align/{sample}/sorted_bam/{sample}_aln_sort.bam")
     params:
         outdir_temp = "results/{prefix}/post_align/{sample}/sorted_bam/{sample}_aln_sort_temp",
         prefix = "{sample}",

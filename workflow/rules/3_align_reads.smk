@@ -3,7 +3,7 @@ rule align_reads:
         r1=align_r1,
         r2=align_r2
     output:
-        aligned_sam_out="results/{prefix}/align_reads/{sample}/{sample}_aln.sam"
+        aligned_sam_out=temp("results/{prefix}/align_reads/{sample}/{sample}_aln.sam")
     params:
         ref_genome=config["reference_genome"]
     log:

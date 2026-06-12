@@ -3,10 +3,10 @@ rule variant_hard_filter:
         final_raw_snp_vcf = "results/{prefix}/samtools_varcall/{sample}/{sample}_aln_mpileup_raw.vcf",
         final_raw_indel_vcf = "results/{prefix}/gatk_varcall/{sample}/{sample}_indel.vcf"
     output:
-        filter_snp_vcf = "results/{prefix}/filtered_vcf/{sample}/{sample}_filter_snp.vcf",
-        filter_snp_final = "results/{prefix}/filtered_vcf/{sample}/{sample}_filter_snp_final.vcf",
-        filter_indel_vcf = "results/{prefix}/filtered_vcf/{sample}/{sample}_filter_indel.vcf",
-        filter_indel_final = "results/{prefix}/filtered_vcf/{sample}/{sample}_filter_indel_final.vcf",
+        filter_snp_vcf = temp("results/{prefix}/filtered_vcf/{sample}/{sample}_filter_snp.vcf"),
+        filter_snp_final = temp("results/{prefix}/filtered_vcf/{sample}/{sample}_filter_snp_final.vcf"),
+        filter_indel_vcf = temp("results/{prefix}/filtered_vcf/{sample}/{sample}_filter_indel.vcf"),
+        filter_indel_final = temp("results/{prefix}/filtered_vcf/{sample}/{sample}_filter_indel_final.vcf"),
         zipped_filtered_snp_vcf = "results/{prefix}/filtered_vcf/{sample}/{sample}_filter_snp_final.vcf.gz",
         zipped_filtered_indel_vcf = "results/{prefix}/filtered_vcf/{sample}/{sample}_filter_indel_final.vcf.gz",
         zipped_filter_snp_vcf = "results/{prefix}/filtered_vcf/{sample}/{sample}_filter_snp.vcf.gz",
